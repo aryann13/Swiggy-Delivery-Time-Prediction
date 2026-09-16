@@ -1,0 +1,26 @@
+Data_Preparation:
+  test_size: 0.2
+  random_state: 42
+
+Train:
+  Random_Forest:
+    n_estimators: 296
+    max_depth: 14
+    max_features: null
+    min_samples_split: 6
+    min_samples_leaf: 2
+    max_samples: 0.6447
+    random_state: 42
+    n_jobs: -1
+
+  XGBoost:
+    n_estimators: 232
+    max_depth: 15
+    learning_rate: 0.1407
+    subsample: 0.7424
+    min_child_weight: 3
+    gamma: 1.1254
+    reg_lambda: 5.8792
+    tree_method: "hist"
+    random_state: 42
+    n_jobs: -1

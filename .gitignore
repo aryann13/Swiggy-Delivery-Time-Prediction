@@ -1,0 +1,6 @@
+# Root gitignore
+archive_scratch/
+*.csv
+__pycache__/
+.env
+.DS_Store

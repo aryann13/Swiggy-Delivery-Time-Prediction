@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swiggy Delivery Time Prediction</title>
+    <meta name="description" content="Predict food delivery time using ML — Stacking Regressor with Random Forest and XGBoost." />
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ── Header ── -->
+    <header class="header">
+        <div class="header__logo">
+            <div class="header__icon">🛵</div>
+            <h1 class="header__title">Swiggy Predict</h1>
+        </div>
+        <p class="header__subtitle">
+            Estimate delivery time using our ML pipeline — powered by a Stacking Regressor (RF + XGBoost).
+        </p>
+    </header>
+
+    <!-- ── Main Form Card ── -->
+    <main class="card">
+        <form id="predict-form" autocomplete="off">
+
+            <!-- ── Delivery Person ── -->
+            <div class="section-label"><span>🏍️</span> Delivery Person</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" min="18" max="50" value="29" required />
+                </div>
+                <div class="form-group">
+                    <label for="ratings">Ratings</label>
+                    <input type="number" id="ratings" min="1" max="5" step="0.1" value="4.5" required />
+                </div>
+            </div>
+
+            <!-- ── Location ── -->
+            <div class="section-label"><span>📍</span> Location Coordinates</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="rest_lat">Restaurant Latitude</label>
+                    <input type="number" id="rest_lat" step="0.000001" value="22.745049" required />
+                </div>
+                <div class="form-group">
+                    <label for="rest_lng">Restaurant Longitude</label>
+                    <input type="number" id="rest_lng" step="0.000001" value="75.892471" required />
+                </div>
+                <div class="form-group">
+                    <label for="del_lat">Delivery Latitude</label>
+                    <input type="number" id="del_lat" step="0.000001" value="22.765049" required />
+                </div>
+                <div class="form-group">
+                    <label for="del_lng">Delivery Longitude</label>
+                    <input type="number" id="del_lng" step="0.000001" value="75.912471" required />
+                </div>
+            </div>
+
+            <!-- ── Order Timing ── -->
+            <div class="section-label"><span>🕐</span> Order Timing</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="order_date">Order Date</label>
+                    <input type="date" id="order_date" value="2022-03-19" required />
+                </div>
+                <div class="form-group">
+                    <label for="order_time">Time Ordered</label>
+                    <input type="time" id="order_time" value="11:00" required />
+                </div>
+                <div class="form-group">
+                    <label for="pickup_time">Time Picked Up</label>
+                    <input type="time" id="pickup_time" value="11:15" required />
+                </div>
+            </div>
+
+            <!-- ── Conditions ── -->
+            <div class="section-label"><span>🌦️</span> Conditions</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="weather">Weather</label>
+                    <select id="weather" required>
+                        <option value="Sunny" selected>Sunny</option>
+                        <option value="Cloudy">Cloudy</option>
+                        <option value="Windy">Windy</option>
+                        <option value="Fog">Fog</option>
+                        <option value="Sandstorms">Sandstorms</option>
+                        <option value="Stormy">Stormy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="traffic">Traffic Density</label>
+                    <select id="traffic" required>
+                        <option value="Low ">Low</option>
+                        <option value="Medium ">Medium</option>
+                        <option value="High " selected>High</option>
+                        <option value="Jam ">Jam</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="festival">Festival</label>
+                    <select id="festival" required>
+                        <option value="No " selected>No</option>
+                        <option value="Yes ">Yes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="city">City Type</label>
+                    <select id="city" required>
+                        <option value="Urban ">Urban</option>
+                        <option value="Metropolitian " selected>Metropolitian</option>
+                        <option value="Semi-Urban ">Semi-Urban</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ── Vehicle & Order ── -->
+            <div class="section-label"><span>🚗</span> Vehicle & Order</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="type_of_vehicle">Vehicle Type</label>
+                    <select id="type_of_vehicle" required>
+                        <option value="motorcycle " selected>Motorcycle</option>
+                        <option value="scooter ">Scooter</option>
+                        <option value="electric_scooter ">Electric Scooter</option>
+                        <option value="bicycle ">Bicycle</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vehicle_condition">Vehicle Condition</label>
+                    <select id="vehicle_condition" required>
+                        <option value="0">0 — Poor</option>
+                        <option value="1">1 — Average</option>
+                        <option value="2" selected>2 — Good</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="type_of_order">Order Type</label>
+                    <select id="type_of_order" required>
+                        <option value="Snack " selected>Snack</option>
+                        <option value="Meal ">Meal</option>
+                        <option value="Drinks ">Drinks</option>
+                        <option value="Buffet ">Buffet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="multiple_deliveries">Multiple Deliveries</label>
+                    <select id="multiple_deliveries" required>
+                        <option value="0 " selected>0</option>
+                        <option value="1 ">1</option>
+                        <option value="2 ">2</option>
+                        <option value="3 ">3</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ── Submit ── -->
+            <button type="submit" class="btn-predict" id="btn-submit">
+                <span id="btn-text">Predict Delivery Time</span>
+            </button>
+        </form>
+
+        <!-- ── Result Area ── -->
+        <div id="result-container" class="result-container"></div>
+    </main>
+
+    <!-- ── Footer ── -->
+    <footer class="footer">
+        <p class="footer__text">
+            Built with FastAPI + Scikit-Learn · 
+            <a href="/docs" target="_blank">API Docs</a>
+        </p>
+    </footer>
+
+</div>
+
+<script src="{{ url_for('static', path='script.js') }}"></script>
+</body>
+</html>
