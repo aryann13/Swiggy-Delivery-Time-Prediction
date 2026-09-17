@@ -16,15 +16,17 @@ from scripts.data_clean_utils import perform_data_cleaning
 set_config(transform_output='pandas')
 
 # initializing dagshub to authenticate and connect with remote tracking
-import dagshub
-dagshub.init(
-    repo_owner = 'aryann13', #identifies my dagshub account
-    repo_name = 'Swiggy-Delivery-Time-Prediction', #specifies the repository where our experiment logs,metrics and models live
-    mlflow = True
-)
-
-# point mlflow to your remote dagshub server instead of your local laptop
-mlflow.set_tracking_uri("https://dagshub.com/aryann13/Swiggy-Delivery-Time-Prediction.mlflow")
+try:
+    import dagshub
+    dagshub.init(
+        repo_owner = 'aryann13', #identifies my dagshub account
+        repo_name = 'Swiggy-Delivery-Time-Prediction', #specifies the repository where our experiment logs,metrics and models live
+        mlflow = True
+    )
+    # point mlflow to your remote dagshub server instead of your local laptop
+    mlflow.set_tracking_uri("https://dagshub.com/aryann13/Swiggy-Delivery-Time-Prediction.mlflow")
+except Exception as e:
+    print(f"Notice: DagsHub remote tracking skipped ({e}). Running in standalone mode.")
 
 # In production software and MLOps, we enforce a Data Contract at the API gateway:
 
