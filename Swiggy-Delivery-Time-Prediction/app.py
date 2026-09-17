@@ -12,21 +12,24 @@ from mlflow import MlflowClient
 from sklearn import set_config
 from scripts.data_clean_utils import perform_data_cleaning
 
+import os
+
 # Tell scikit-learn transformers to output Pandas DataFrames instead of NumPy arrays
 set_config(transform_output='pandas')
 
-# initializing dagshub to authenticate and connect with remote tracking
-try:
-    import dagshub
-    dagshub.init(
-        repo_owner = 'aryann13', #identifies my dagshub account
-        repo_name = 'Swiggy-Delivery-Time-Prediction', #specifies the repository where our experiment logs,metrics and models live
-        mlflow = True
-    )
-    # point mlflow to your remote dagshub server instead of your local laptop
-    mlflow.set_tracking_uri("https://dagshub.com/aryann13/Swiggy-Delivery-Time-Prediction.mlflow")
-except Exception as e:
-    print(f"Notice: DagsHub remote tracking skipped ({e}). Running in standalone mode.")
+# initializing dagshub only if remote authentication token is provided in environment
+if os.getenv("DAGSHUB_USER_TOKEN"):
+    try:
+        import dagshub
+        dagshub.init(
+            repo_owner = 'aryann13', #identifies my dagshub account
+            repo_name = 'Swiggy-Delivery-Time-Prediction', #specifies the repository where our experiment logs,metrics and models live
+            mlflow = True
+        )
+        # point mlflow to your remote dagshub server instead of your local laptop
+        mlflow.set_tracking_uri("https://dagshub.com/aryann13/Swiggy-Delivery-Time-Prediction.mlflow")
+    except Exception as e:
+        print(f"Notice: DagsHub remote tracking skipped ({e}). Running in standalone mode.")
 
 # In production software and MLOps, we enforce a Data Contract at the API gateway:
 
@@ -80,24 +83,22 @@ ordinal_cat_cols = ["traffic", "distance_type"]
 # ---------------------------------------------------------
 # Model & Preprocessor Loading (Executed ONCE at Startup)
 # ---------------------------------------------------------
-client = MlflowClient()
-
-# 1. Dynamically read the registered model name from run_information.json
-model_name = load_model_information("run_information.json")['model_name']
-
-# 2. Lifecycle stage of the model (currently in 'Staging')
-stage = "Staging"
-
-# 3. MLflow registry URI
-model_path = f"models:/{model_name}/{stage}"
-
-# 4. Load the trained model from MLflow registry (with local fallback)
-try:
-    model = mlflow.sklearn.load_model(model_path)
-    print(f"Loaded model '{model_name}' (Stage: {stage}) from MLflow Registry")
-except Exception as e:
-    print(f"Registry load failed ({e}), loading local models/model.joblib")
-    model = joblib.load("models/model.joblib")
+# 1. Load the trained model (prioritize fast local model, fallback to MLflow registry)
+local_model_path = "models/model.joblib"
+if os.path.exists(local_model_path):
+    model = joblib.load(local_model_path)
+    print("Loaded model from local models/model.joblib")
+else:
+    try:
+        client = MlflowClient()
+        model_name = load_model_information("run_information.json")['model_name']
+        stage = "Staging"
+        model_path = f"models:/{model_name}/{stage}"
+        model = mlflow.sklearn.load_model(model_path)
+        print(f"Loaded model '{model_name}' (Stage: {stage}) from MLflow Registry")
+    except Exception as e:
+        print(f"Registry load failed ({e}), loading local models/model.joblib")
+        model = joblib.load("models/model.joblib")
 
 # 5. Load the fitted preprocessor
 preprocessor_path = "models/preprocessor.joblib"
